@@ -1,6 +1,4 @@
-# Personal Dashboard Hub - Dokumentacja
-
-### Komponenty Aplikacji
+# Dashboard Hub
 
 #### 1. Frontend (React-like SPA)
 - **Technologia**: HTML5, CSS3, JavaScript (Vanilla)
@@ -67,26 +65,32 @@ Internet → LoadBalancer → Frontend (Nginx) → API Gateway → Redis
 
 ---
 
-## Struktura Namespace'ów
+## Szybkie wdrożenie
 
-### dashboard-app
-- **Przeznaczenie**: Warstwa aplikacyjna
-- **Komponenty**:
-  - Frontend deployment + service
-  - API deployment + service
-  - Redis deployment + service
-  - ConfigMaps z kodem aplikacji
-  - Service Account dla API
+### 1. Uruchomienie minikube
+```bash
+minikube start --memory=4096 --cpus=4 --disk-size=20g
 
-### dashboard-db
-- **Przeznaczenie**: Warstwa danych
-- **Komponenty**:
-  - PostgreSQL deployment + service
-  - PersistentVolumeClaim
-  - Secrets z danymi dostępowymi
+# Sprawdź status
+kubectl get nodes
+```
 
----
+### 2. Wdrożenie aplikacji
+```bash
+# Zastosuj wszystkie manifesty Kubernetes
+kubectl apply -f k8s-manifests/ --recursive
 
+# Sprawdź status wdrożenia (poczekaj na Running)
+kubectl get pods --all-namespaces -w
+```
+
+### 3. Dostęp do aplikacji
+```bash
+# Opcja 1: Port forwarding (zalecane dla testów)
+kubectl port-forward service/frontend-service 8080:80 -n dashboard-app
+
+# Aplikacja dostępna pod: http://localhost:8080
+```
 ## Konfiguracja i Zarządzanie
 
 ### ConfigMaps
@@ -126,15 +130,61 @@ dashboard-api-role:
 2. **api-netpol**: API może komunikować się z Redis i PostgreSQL
 3. **postgres-netpol**: PostgreSQL przyjmuje tylko połączenia od API
 
+---
 
-## Zasoby i narzędzia
+## Monitoring i Debugging
 
-**Wymagane:**
-- Ubuntu VM (4GB RAM, 2 CPU, 20GB storage)
-- minikube, kubectl, k9s
-- Git, edytor tekstu
+### Monitorowanie z k9s
+```bash
+# Uruchom graficzny interfejs Kubernetes
+k9s
 
-**Opcjonalne:**
-- Docker Desktop (dla lokalnego developmentu)
-- Postman (testowanie API)
-- Browser Developer Tools
+# Przydatne skróty w k9s:
+# :pods - zobacz wszystkie pody
+# :services - zobacz serwisy  
+# :namespaces - przełączaj między namespace'ami
+# l - logi wybranego poda
+# s - shell do poda
+# d - usuń zasób
+# e - edytuj zasób
+```
+
+### Sprawdzanie logów
+```bash
+# Logi z API
+kubectl logs -l app=api -n dashboard-app --tail=50 -f
+
+# Logi z frontendu
+kubectl logs -l app=frontend -n dashboard-app --tail=50 -f
+
+# Logi z bazy danych
+kubectl logs -l app=postgres -n dashboard-db --tail=50 -f
+```
+
+### Health Checks
+```bash
+# Test API health
+kubectl port-forward service/api-service 3001:3000 -n dashboard-app
+curl http://localhost:3001/health
+
+# Test frontend health
+kubectl port-forward service/frontend-service 8080:80 -n dashboard-app
+curl http://localhost:8080
+```
+
+---
+
+## API Endpoints
+
+### Health Check
+- `GET /health` - Status aplikacji
+- `GET /ready` - Gotowość aplikacji
+
+### System Status
+- `GET /api/status` - Status wszystkich komponentów
+
+### Task Management
+- `GET /api/tasks` - Lista wszystkich zadań
+- `POST /api/tasks` - Dodaj nowe zadanie
+- `PUT /api/tasks/:id` - Aktualizuj zadanie
+- `DELETE /api/tasks/:id` - Usuń zadanie
