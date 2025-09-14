@@ -57,12 +57,6 @@ Internet → LoadBalancer → Frontend (Nginx) → API Gateway → Redis
   - CPU: minimum 2 rdzenie (zalecane 4)
   - Storage: 20GB wolnego miejsca
 
-### Narzędzia
-- **kubectl**: CLI Kubernetes
-- **k9s**: Terminal UI dla Kubernetes
-- **minikube**: Lokalne środowisko Kubernetes
-- **Docker**: Konteneryzacja aplikacji
-
 ---
 
 ## Szybkie wdrożenie
