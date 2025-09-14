@@ -1,0 +1,467 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: frontend-code
+  namespace: dashboard-app
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html lang="pl">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Personal Dashboard Hub</title>
+        <link rel="stylesheet" href="style.css">
+    </head>
+    <body>
+        <div class="container">
+            <header>
+                <h1>Dashboard Hub</h1>
+                <div class="status-bar">
+                    <span id="status" class="status-online">Online</span>
+                    <span id="last-update">Last update: --</span>
+                </div>
+            </header>
+            
+            <div class="dashboard-grid">
+                <div class="card">
+                    <h2>System Status</h2>
+                    <div id="system-status">
+                        <div class="metric">
+                            <span class="label">API:</span>
+                            <span id="api-status" class="status-unknown">Checking...</span>
+                        </div>
+                        <div class="metric">
+                            <span class="label">Database:</span>
+                            <span id="db-status" class="status-unknown">Checking...</span>
+                        </div>
+                        <div class="metric">
+                            <span class="label">Cache:</span>
+                            <span id="cache-status" class="status-unknown">Checking...</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h2>Task Manager</h2>
+                    <div class="task-input">
+                        <input type="text" id="task-input" placeholder="Add new task...">
+                        <select id="priority-select">
+                            <option value="low">Low</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="high">High</option>
+                        </select>
+                        <button onclick="addTask()">Add</button>
+                    </div>
+                    <div id="tasks-list"></div>
+                </div>
+                
+                <div class="card">
+                    <h2>Kubernetes Info</h2>
+                    <div class="k8s-info">
+                        <div class="metric">
+                            <span class="label">Namespace:</span>
+                            <span>dashboard-app</span>
+                        </div>
+                        <div class="metric">
+                            <span class="label">Pods:</span>
+                            <span id="pod-count">--</span>
+                        </div>
+                        <div class="metric">
+                            <span class="label">Services:</span>
+                            <span id="service-count">--</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h2>Quick Notes</h2>
+                    <textarea id="notes" placeholder="Your notes here..." rows="6"></textarea>
+                    <button onclick="saveNotes()">Save Notes</button>
+                </div>
+            </div>
+        </div>
+        
+        <script src="app.js"></script>
+    </body>
+    </html>
+  
+  style.css: |
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+    
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+        color: white;
+        min-height: 100vh;
+        padding: 20px;
+    }
+    
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+    
+    header {
+        text-align: center;
+        margin-bottom: 30px;
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 10px;
+        padding: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    header h1 {
+        font-size: 2.5em;
+        margin-bottom: 10px;
+        color: white;
+    }
+    
+    .status-bar {
+        display: flex;
+        justify-content: center;
+        gap: 30px;
+        font-size: 0.9em;
+        opacity: 0.9;
+        color: white;
+    }
+    
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 20px;
+    }
+    
+    .card {
+        background: rgba(0, 0, 0, 0.4);
+        border-radius: 10px;
+        padding: 25px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+    }
+    
+    .card h2 {
+        color: white;
+        margin-bottom: 20px;
+        font-size: 1.3em;
+        border-bottom: 2px solid #2a5298;
+        padding-bottom: 10px;
+    }
+    
+    .metric {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .metric:last-child {
+        border-bottom: none;
+    }
+    
+    .label {
+        font-weight: 600;
+        color: white;
+    }
+    
+    .status-online { 
+        color: #4CAF50; 
+        font-weight: bold;
+    }
+    .status-offline { 
+        color: #f44336; 
+        font-weight: bold;
+    }
+    .status-unknown { 
+        color: #FF9800; 
+        font-weight: bold;
+    }
+    
+    .task-input {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+    
+    .task-input input {
+        flex: 1;
+        padding: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 5px;
+        background: rgba(0, 0, 0, 0.3);
+        color: white;
+    }
+    
+    .task-input input::placeholder {
+        color: rgba(255, 255, 255, 0.6);
+    }
+    
+    .task-input select {
+        padding: 10px 15px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 5px;
+        background: rgba(0, 0, 0, 0.3);
+        color: white;
+        cursor: pointer;
+    }
+    
+    .task-input button, button {
+        padding: 10px 15px;
+        border: 1px solid #2a5298;
+        border-radius: 5px;
+        cursor: pointer;
+        background: #2a5298;
+        color: white;
+        font-weight: bold;
+        transition: all 0.3s ease;
+    }
+    
+    .task-input button:hover, button:hover {
+        background: #1e3c72;
+        border-color: #1e3c72;
+        transform: scale(1.05);
+    }
+    
+    .task-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px;
+        margin: 5px 0;
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 5px;
+        border-left: 4px solid #2a5298;
+        color: white;
+    }
+    
+    .task-item.completed {
+        opacity: 0.7;
+        border-left-color: #4CAF50;
+        text-decoration: line-through;
+    }
+    
+    .task-item.high { border-left-color: #f44336; }
+    .task-item.medium { border-left-color: #FF9800; }
+    .task-item.low { border-left-color: #9E9E9E; }
+    
+    .task-actions {
+        display: flex;
+        gap: 5px;
+    }
+    
+    .task-actions button {
+        padding: 5px 10px;
+        border: none;
+        border-radius: 3px;
+        cursor: pointer;
+        font-size: 0.8em;
+        transition: all 0.3s ease;
+    }
+    
+    .toggle-btn { 
+        background: #4CAF50; 
+        color: white; 
+    }
+    .toggle-btn:hover { 
+        background: #45a049; 
+        transform: scale(1.1);
+    }
+    
+    .delete-btn { 
+        background: #f44336; 
+        color: white; 
+    }
+    .delete-btn:hover { 
+        background: #da190b; 
+        transform: scale(1.1);
+    }
+    
+    #notes {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 5px;
+        resize: vertical;
+        font-family: inherit;
+        margin-bottom: 10px;
+        background: rgba(0, 0, 0, 0.3);
+        color: white;
+    }
+    
+    #notes::placeholder {
+        color: rgba(255, 255, 255, 0.6);
+    }
+    
+    .save-btn {
+        background: #4CAF50;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .save-btn:hover {
+        background: #45a049;
+        transform: scale(1.05);
+    }
+  
+  app.js: |
+    const API_BASE = '/api';
+    let tasks = [];
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        loadTasks();
+        loadSystemStatus();
+        loadNotes();
+        
+        // 30 seconds
+        setInterval(loadSystemStatus, 30000);
+        
+        // 1 sec
+        updateTimestamp();
+        setInterval(updateTimestamp, 1000);
+    });
+    
+    function updateTimestamp() {
+        document.getElementById('last-update').textContent = 
+            'Last update: ' + new Date().toLocaleTimeString();
+    }
+    
+    async function loadSystemStatus() {
+        try {
+            const response = await fetch(${API_BASE}/status);
+            const status = await response.json();
+            
+            document.getElementById('api-status').textContent = status.services.api;
+            document.getElementById('api-status').className = 
+                status.services.api === 'healthy' ? 'status-online' : 'status-offline';
+            
+            document.getElementById('db-status').textContent = status.services.database;
+            document.getElementById('db-status').className = 
+                status.services.database === 'connected' ? 'status-online' : 'status-offline';
+            
+            document.getElementById('cache-status').textContent = status.services.cache;
+            document.getElementById('cache-status').className = 
+                status.services.cache === 'connected' ? 'status-online' : 'status-offline';
+            
+            document.getElementById('status').className = 'status-online';
+            document.getElementById('status').textContent = 'Online';
+            
+        } catch (error) {
+            console.error('Failed to load system status:', error);
+            document.getElementById('status').className = 'status-offline';
+            document.getElementById('status').textContent = 'Offline';
+        }
+    }
+    
+    async function loadTasks() {
+        try {
+            const response = await fetch(${API_BASE}/tasks);
+            tasks = await response.json();
+            renderTasks();
+        } catch (error) {
+            console.error('Failed to load tasks:', error);
+        }
+    }
+    
+    function renderTasks() {
+        const tasksList = document.getElementById('tasks-list');
+        tasksList.innerHTML = '';
+        
+        tasks.forEach(task => {
+            const taskElement = document.createElement('div');
+            taskElement.className = task-item ${task.completed ? 'completed' : ''} ${task.priority};
+            
+            taskElement.innerHTML = `
+                <span>${task.title}</span>
+                <div class="task-actions">
+                    <button class="toggle-btn" onclick="toggleTask(${task.id})">
+                        ${task.completed ? 'Undo' : 'Done'}
+                    </button>
+                    <button class="delete-btn" onclick="deleteTask(${task.id})">Delete</button>
+                </div>
+            `;
+            
+            tasksList.appendChild(taskElement);
+        });
+    }
+    
+    async function addTask() {
+        const input = document.getElementById('task-input');
+        const priority = document.getElementById('priority-select').value;
+        const title = input.value.trim();
+        
+        if (!title) return;
+        
+        try {
+            const response = await fetch(${API_BASE}/tasks, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title, priority })
+            });
+            
+            const newTask = await response.json();
+            tasks.push(newTask);
+            renderTasks();
+            input.value = '';
+        } catch (error) {
+            console.error('Failed to add task:', error);
+        }
+    }
+    
+    async function toggleTask(id) {
+        const task = tasks.find(t => t.id === id);
+        if (!task) return;
+        
+        try {
+            const response = await fetch(${API_BASE}/tasks/${id}, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ completed: !task.completed })
+            });
+            
+            const updatedTask = await response.json();
+            const taskIndex = tasks.findIndex(t => t.id === id);
+            tasks[taskIndex] = updatedTask;
+            renderTasks();
+        } catch (error) {
+            console.error('Failed to update task:', error);
+        }
+    }
+    
+    async function deleteTask(id) {
+        try {
+            await fetch(${API_BASE}/tasks/${id}, { method: 'DELETE' });
+            tasks = tasks.filter(t => t.id !== id);
+            renderTasks();
+        } catch (error) {
+            console.error('Failed to delete task:', error);
+        }
+    }
+    
+    function saveNotes() {
+        const notes = document.getElementById('notes').value;
+        localStorage.setItem('dashboard-notes', notes);
+        alert('Notes saved locally!');
+    }
+    
+    function loadNotes() {
+        const notes = localStorage.getItem('dashboard-notes');
+        if (notes) {
+            document.getElementById('notes').value = notes;
+        }
+    }
+    
+    // Handle Enter key in task input
+    document.getElementById('task-input').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            addTask();
+        }
+    });
